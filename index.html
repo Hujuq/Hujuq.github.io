@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drag-and-Drop Builder with Properties</title>
+    <title>website builder</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -88,11 +88,32 @@
             border: none;
             cursor: pointer;
         }
+        .btn{
+            padding: 12px;
+            background-color: black;
+            color: white;
+            font-weight: bold;
+            text-decoration: none;
+            border: 0px solid black;
+            border-radius: 12px;
+        }
+        .btn:hover{
+            background-color:white;
+            color:black;
+        }
+        a{
+            color: black;
+            text-decoration: none;            
+        };
     </style>
 </head>
 <body>
-
+   
+    <br>
+    <br>
+    <div></div>
 <div id="sidebar">
+    <button id="download-html">Download HTML</button>
     <h3>Elements</h3>
     <div class="draggable" data-type="text">Text</div>
     <div class="draggable" data-type="button">Button</div>
@@ -119,16 +140,26 @@
 
     <label for="prop-textcolor">Text Color:</label>
     <input type="color" id="prop-textcolor">
+    
+    <label for="prop-url">url:</label>
+    <input type="text" id="prop-url">
+    
+    <label for="prop-bg-img">image</label>
+    <input id="prop-bg-img" type="file">
 
     <button id="delete-element">Delete Element</button>
 </div>
-<button id="download-html">Download HTML</button>
+
 <script>
     const sidebarItems = document.querySelectorAll('.draggable');
     const dragContainer = document.getElementById('drag-container');
     const propertiesPanel = document.getElementById('properties-panel');
     let selectedElement = null;
-
+     document.getElementById('drag-container').addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() === 'a' && !event.target.classList.contains('btn')) {
+        event.preventDefault(); // Prevent the default action (navigation)
+    }
+});
     sidebarItems.forEach(item => {
         item.addEventListener('dragstart', function (e) {
             e.dataTransfer.setData('text/plain', item.dataset.type);
@@ -151,34 +182,34 @@
     });
 
     function createElement(type, x, y) {
-        let element;
-        if (type === 'text') {
-            element = document.createElement('div');
-            element.contentEditable = true;
-            element.textContent = 'Edit me!';
-        } else if (type === 'button') {
-            element = document.createElement('button');
-            element.textContent = 'Click Me';
-        } else if (type === 'image') {
-            element = document.createElement('img');
-            element.src = 'https://via.placeholder.com/150';
-            element.alt = 'Placeholder Image';
-            element.style.width = '150px';
-        }
-
-        element.classList.add('dropped');
-        element.style.left = `${x - dragContainer.offsetLeft}px`;
-        element.style.top = `${y - dragContainer.offsetTop}px`;
-
-        
-
-        dragContainer.appendChild(element);
-
-        makeElementDraggable(element);
-        element.addEventListener('click', function () {
-            selectElement(this);
-        });
+    let element;
+    if (type === 'text') {
+        element = document.createElement('a');
+        element.contentEditable = true;
+        element.textContent = 'Edit me!';
+        element.href = '#'; // Prevents navigation in editor
+    } else if (type === 'button') {
+        element = document.createElement('a');
+        element.classList.add('btn');
+        element.textContent = 'Click Me';
+        element.href = '#'; // Prevents navigation in editor
+    } else if (type === 'image') {
+        element = document.createElement('div');
+        element.style.width = '150px';
+        element.style.height = '150px';
     }
+
+    element.classList.add('dropped');
+    element.style.left = `${x - dragContainer.offsetLeft}px`;
+    element.style.top = `${y - dragContainer.offsetTop}px`;
+
+    dragContainer.appendChild(element);
+
+    makeElementDraggable(element);
+    element.addEventListener('click', function () {
+        selectElement(this);
+    });
+}
 
     function makeElementDraggable(element) {
         element.onmousedown = function (e) {
@@ -240,57 +271,63 @@
     }
 
     function updatePropertiesPanel(element) {
-        propertiesPanel.style.display = 'block';
+    propertiesPanel.style.display = 'block';
 
-        const textProp = document.getElementById('prop-text');
-        const widthProp = document.getElementById('prop-width');
-        const heightProp = document.getElementById('prop-height');
-        const bgColorProp = document.getElementById('prop-bgcolor');
-        const textColorProp = document.getElementById('prop-textcolor');
+    const textProp = document.getElementById('prop-text');
+    const widthProp = document.getElementById('prop-width');
+    const heightProp = document.getElementById('prop-height');
+    const bgColorProp = document.getElementById('prop-bgcolor');
+    const urlProp = document.getElementById('prop-url');
+    const textColorProp = document.getElementById('prop-textcolor');
+    const bgImgProp = document.getElementById('prop-bg-img');
 
-        textProp.value = element.textContent || '';
-        widthProp.value = parseInt(window.getComputedStyle(element).width) || '';
-        heightProp.value = parseInt(window.getComputedStyle(element).height) || '';
-        bgColorProp.value = rgbToHex(window.getComputedStyle(element).backgroundColor);
-        textColorProp.value = rgbToHex(window.getComputedStyle(element).color);
+    textProp.value = element.textContent || '';
+    widthProp.value = parseInt(window.getComputedStyle(element).width) || '';
+    heightProp.value = parseInt(window.getComputedStyle(element).height) || '';
+    bgColorProp.value = rgbToHex(window.getComputedStyle(element).backgroundColor);
+    textColorProp.value = rgbToHex(window.getComputedStyle(element).color);
+    urlProp.value = element.dataset.href || '';
+    bgImgProp.value = element.style.backgroundImage;
 
-        textProp.oninput = function () {
-            if (element.tagName.toLowerCase() === 'button' || element.contentEditable) {
-                element.textContent = this.value;
-            }
-        };
+    textProp.oninput = function () {
+        if (element.tagName.toLowerCase() === 'button' || element.contentEditable) {
+            element.textContent = this.value;
+        }
+    };
 
-        widthProp.oninput = function () {
-            element.style.width = this.value + 'px';
-        };
+    widthProp.oninput = function () {
+        element.style.width = this.value + 'px';
+    };
 
-        heightProp.oninput = function () {
-            element.style.height = this.value + 'px';
-        };
+    heightProp.oninput = function () {
+        element.style.height = this.value + 'px';
+    };
 
-        bgColorProp.oninput = function () {
-            element.style.backgroundColor = this.value;
-        };
-        
-        textColorProp.oninput = function () {
-            element.style.color = this.value;
-        };
+    bgColorProp.oninput = function () {
+        element.style.backgroundColor = this.value;
+    };
 
-        // Handle delete button
-        document.getElementById('delete-element').onclick = function () {
-            if (selectedElement) {
-                selectedElement.remove();
-                propertiesPanel.style.display = 'none';
-                selectedElement = null;
-            }
-        };
+    textColorProp.oninput = function () {
+        element.style.color = this.value;
+    };
 
-        // Handle close button for properties panel
-        document.getElementById('close-panel').onclick = function () {
+    urlProp.oninput = function () {
+        element.dataset.href = this.value; // Store the URL in data-href
+    };
+
+    document.getElementById('delete-element').onclick = function () {
+        if (selectedElement) {
+            selectedElement.remove();
             propertiesPanel.style.display = 'none';
             selectedElement = null;
-        };
-    }
+        }
+    };
+
+    document.getElementById('close-panel').onclick = function () {
+        propertiesPanel.style.display = 'none';
+        selectedElement = null;
+    };
+}
 
     function rgbToHex(rgb) {
         const result = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/.exec(rgb);
@@ -303,10 +340,16 @@
         return rgb; // return the original value if it doesn't match
     }
     document.getElementById('download-html').addEventListener('click', function() {
-    // Get the content of the drag container
-    const dragContainerContent = document.getElementById('drag-container').innerHTML;
+        dragContainer.querySelectorAll('[contenteditable="true"]').forEach(function(el) {
+        el.removeAttribute('contenteditable');
+    });
+    const dragContainerContent = dragContainer.cloneNode(true);
+    
+    // Restore URLs from data-href attributes before download
+    dragContainerContent.querySelectorAll('[data-href]').forEach(function(el) {
+        el.href = el.dataset.href;
+    });
 
-    // Wrap the content in a complete HTML structure
     const fullHtmlContent = `
     <!DOCTYPE html>
     <html lang="en">
@@ -317,32 +360,37 @@
         <style>
             body { font-family: Arial, sans-serif; }
             .dropped { position: absolute; }
+             .btn{
+            padding: 12px;
+            background-color: black;
+            color: white;
+            font-weight: bold;
+            text-decoration: none;
+            border: 0px solid black;
+            border-radius: 12px;
+            transition: all 0.5s ease;
+        }
+        .btn:hover{
+            background-color:white;
+            color:black;
+        }
+        a{
+            color: black;
+            text-decoration: none;            
+        };
         </style>
     </head>
     <body>
-        ${dragContainerContent}
+        ${dragContainerContent.innerHTML}
     </body>
     </html>`;
 
-    // Create a Blob from the HTML string
     const blob = new Blob([fullHtmlContent], { type: 'text/html' });
-
-    // Create a link element
     const link = document.createElement('a');
-
-    // Set the download attribute with a filename
     link.download = 'downloaded_work.html';
-
-    // Create an object URL for the Blob
     link.href = window.URL.createObjectURL(blob);
-
-    // Append the link to the document body temporarily
     document.body.appendChild(link);
-
-    // Programmatically click the link to trigger the download
     link.click();
-
-    // Remove the link after downloading
     document.body.removeChild(link);
 });
 </script>
