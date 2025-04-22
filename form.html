@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
+  <meta charset="UTF-8">
   <title>tryout form</title>
   <style>
     body {
@@ -14,7 +14,6 @@
 
     h1 {
       text-align: center;
-      color: yellow;
       padding: 20px;
       font-size: 2em;
     }
@@ -32,7 +31,6 @@
     label {
       display: block;
       margin-bottom: 10px;
-      color: yellow;
     }
 
     input, select {
@@ -122,8 +120,10 @@
       display: none;
     }
 
-    .visible {
+    small {
       display: block;
+      margin-top: 5px;
+      color: #aaa;
     }
   </style>
   <script>
@@ -133,14 +133,41 @@
       document.getElementById('timeFields').style.display = isAuto ? 'none' : 'block';
     }
 
-    window.onload = function() {
-      toggleFields(); // run it on page load too
+    function toUTC(timeStr) {
+      if (!timeStr) return '';
+      const [hours, minutes] = timeStr.split(":");
+      const now = new Date();
+      now.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      return now.toISOString().substring(11, 16) + " UTC";
+    }
+
+    function convertTimesToUTC(e) {
+      const isAuto = document.getElementById('autoTryout').checked;
+      if (!isAuto) {
+        const from = document.getElementById('fromTime').value;
+        const till = document.getElementById('tillTime').value;
+        document.getElementById('fromUTC').value = toUTC(from);
+        document.getElementById('tillUTC').value = toUTC(till);
+      }
+    }
+
+    function updateLabels() {
+      const from = document.getElementById('fromTime').value;
+      const till = document.getElementById('tillTime').value;
+
+      document.getElementById('fromLabel').textContent = from ? 'UTC: ' + toUTC(from) : '';
+      document.getElementById('tillLabel').textContent = till ? 'UTC: ' + toUTC(till) : '';
+    }
+
+    window.onload = function () {
+      toggleFields();
+      document.getElementById('tryoutForm').addEventListener('submit', convertTimesToUTC);
     }
   </script>
 </head>
 <body>
   <h1>Hello, World!</h1>
-  <form action="https://formspree.io/f/xldjqvkw" method="POST">
+  <form id="tryoutForm" action="https://formspree.io/f/xldjqvkw" method="POST">
     <label>
       Your discord username:
       <input type="text" name="username" required>
@@ -174,13 +201,19 @@
     <div id="timeFields" class="conditional">
       <label>
         Available from:
-        <input type="time" name="available_from">
+        <input type="time" id="fromTime" oninput="updateLabels()">
+        <small id="fromLabel"></small>
       </label>
       <label>
         Available till:
-        <input type="time" name="available_till">
+        <input type="time" id="tillTime" oninput="updateLabels()">
+        <small id="tillLabel"></small>
       </label>
     </div>
+
+    <!-- Hidden UTC-converted time fields -->
+    <input type="hidden" name="available_from_utc" id="fromUTC">
+    <input type="hidden" name="available_till_utc" id="tillUTC">
 
     <button type="submit">Send</button>
   </form>
